@@ -132,12 +132,12 @@ export default function Estoque() {
   };
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="p-4 md:p-8 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Gerenciar Materiais e Insumos</h1>
-            <p className="text-slate-600">Controle estoque de produtos</p>
+            <h1 className="text-3xl font-bold mb-2">Gerenciar Materiais e Insumos</h1>
+            <p className="text-muted-foreground">Controle estoque de produtos</p>
           </div>
           <Button onClick={() => { setShowForm(!showForm); setEditingProduct(null); }} className="gap-2">
             <Plus className="h-4 w-4" /> Novo Material

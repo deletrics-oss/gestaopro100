@@ -27,7 +27,7 @@ const DEFAULT_SOUNDS: Record<string, SoundType> = {
 
 export function SoundAlertProvider({ children }: { children: ReactNode }) {
   const [alertMode, setAlertModeState] = useState<AlertMode>(() => {
-    return (localStorage.getItem('alert_mode') as AlertMode) || 'disabled';
+    return (localStorage.getItem('alert_mode') as AlertMode) || 'on-order';
   });
   
   const [audioSource, setAudioSourceState] = useState<AudioSource>(() => {
@@ -71,7 +71,14 @@ export function SoundAlertProvider({ children }: { children: ReactNode }) {
 
       // Som padrão do servidor
       const audio = new Audio(`/sounds/${type}.mp3`);
-      audio.play().catch((err) => console.log('Audio play failed:', err));
+      audio.volume = 1.0;
+      audio.play().catch((err) => {
+        console.log('Audio play failed:', err);
+        // Tentar tocar novamente após interação do usuário
+        document.addEventListener('click', () => {
+          audio.play().catch(e => console.log('Retry failed:', e));
+        }, { once: true });
+      });
     } catch (error) {
       console.error('Error playing alert:', error);
     }

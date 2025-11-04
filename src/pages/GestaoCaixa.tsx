@@ -292,19 +292,36 @@ export default function GestaoCaixa() {
               </div>
 
               <div className="flex gap-2">
-                <Button type="submit" id="entrada-btn" className="hidden" onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('movement-type')?.setAttribute('value', 'entrada');
-                  const form = document.getElementById('cash-form') as HTMLFormElement;
-                  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-                }}>Entrada</Button>
-                <Button type="submit" id="saida-btn" className="hidden" onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('movement-type')?.setAttribute('value', 'saida');
-                  const form = document.getElementById('cash-form') as HTMLFormElement;
-                  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-                }}>Saída</Button>
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+                <Button 
+                  type="submit" 
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('movement-type')?.setAttribute('value', 'entrada');
+                    const form = document.getElementById('cash-form') as HTMLFormElement;
+                    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                  }}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Salvar Entrada
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="destructive"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('movement-type')?.setAttribute('value', 'saida');
+                    const form = document.getElementById('cash-form') as HTMLFormElement;
+                    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                  }}
+                >
+                  <TrendingDown className="h-4 w-4 mr-2" />
+                  Salvar Saída
+                </Button>
+                <Button type="button" variant="outline" onClick={() => {
+                  setShowForm(false);
+                  setEditingMovement(null);
+                }}>Cancelar</Button>
                 <CopyButton 
                   textToCopy={`Tipo: Entrada/Saída\nValor: R$ 0,00\nCategoria: Outros\nDescrição: `}
                   label="Copiar Modelo"

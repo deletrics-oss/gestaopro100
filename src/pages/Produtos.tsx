@@ -13,12 +13,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Edit, Package, Copy, Plus, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { CopyButton } from "@/components/CopyButton";
+import { CSVImporter } from "@/components/CSVImporter";
 
 export default function Produtos() {
   const queryClient = useQueryClient();
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showImporter, setShowImporter] = useState(false);
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
@@ -164,11 +166,11 @@ export default function Produtos() {
   const lowStockProducts = products.filter((p: any) => p.stock_quantity <= p.minimum_stock);
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <div className="p-4 md:p-8 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Produtos</h1>
-          <p className="text-slate-600">Gerencie seu catálogo de produtos</p>
+          <h1 className="text-3xl font-bold mb-2">Produtos</h1>
+          <p className="text-muted-foreground">Gerencie seu catálogo de produtos</p>
         </div>
 
         {lowStockProducts.length > 0 && (
@@ -184,11 +186,26 @@ export default function Produtos() {
           </Card>
         )}
 
-        <div className="flex justify-end mb-6">
+        <div className="flex justify-end gap-2 mb-6">
+          <Button variant="outline" onClick={() => setShowImporter(!showImporter)} className="gap-2">
+            <FileDown className="h-4 w-4" /> Importar CSV
+          </Button>
           <Button onClick={() => { setShowForm(true); setEditingProduct(null); }} className="gap-2">
             <Plus className="h-4 w-4" /> Novo Produto
           </Button>
         </div>
+
+        {showImporter && (
+          <div className="mb-6">
+            <CSVImporter 
+              type="products" 
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['products'] });
+                setShowImporter(false);
+              }} 
+            />
+          </div>
+        )}
 
         {showForm && (
           <Card className="mb-6">
