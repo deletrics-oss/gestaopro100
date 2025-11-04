@@ -57,33 +57,6 @@ export function SoundAlertProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const playAlert = useCallback((type: SoundType) => {
-    if (alertMode === 'disabled') return;
-
-    try {
-      if (audioSource === 'local') {
-        const preferredAudio = localStorage.getItem('preferred_alert_manual_audio');
-        if (preferredAudio) {
-          playManualAudio(preferredAudio);
-          return;
-        }
-      }
-
-      // Som padrão do servidor
-      const audio = new Audio(`/sounds/${type}.mp3`);
-      audio.volume = 1.0;
-      audio.play().catch((err) => {
-        console.log('Audio play failed:', err);
-        // Tentar tocar novamente após interação do usuário
-        document.addEventListener('click', () => {
-          audio.play().catch(e => console.log('Retry failed:', e));
-        }, { once: true });
-      });
-    } catch (error) {
-      console.error('Error playing alert:', error);
-    }
-  }, [alertMode, audioSource]);
-
   const playManualAudio = useCallback((name: string) => {
     try {
       const audioKey = `manual_audio_${name}`;
@@ -100,6 +73,45 @@ export function SoundAlertProvider({ children }: { children: ReactNode }) {
       console.error('Error playing manual audio:', error);
     }
   }, []);
+
+  const playAlert = useCallback((type: SoundType) => {
+    if (alertMode === 'disabled') return;
+
+    try {
+      if (audioSource === 'local') {
+        const preferredAudio = localStorage.getItem('preferred_alert_manual_audio');
+        if (preferredAudio) {
+          playManualAudio(preferredAudio);
+          return;
+        }
+      }
+
+      // Som padrão do servidor
+      const audio = new Audio(`/sounds/${type}.mp3`);
+      audio.volume = 1.0;
+      
+      // Adiciona timestamp para forçar o reload do áudio
+      audio.src = `/sounds/${type}.mp3?t=${Date.now()}`;
+      
+      const playPromise = audio.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log('Audio played successfully:', type);
+          })
+          .catch((err) => {
+            console.log('Audio play failed:', err, 'for type:', type);
+            // Tentar tocar novamente após interação do usuário
+            document.addEventListener('click', () => {
+              audio.play().catch(e => console.log('Retry failed:', e));
+            }, { once: true });
+          });
+      }
+    } catch (error) {
+      console.error('Error playing alert:', error);
+    }
+  }, [alertMode, audioSource, playManualAudio]);
 
   const testSound = useCallback(() => {
     playAlert('novo_pedido');
