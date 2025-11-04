@@ -8,25 +8,6 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
 
-const chartData = [
-  { product: "Fliperama metal - 1player", value: 1800 },
-  { product: "pesinho - para fliperama", value: 1500 },
-  { product: "borrachinha - do pesinho", value: 1200 },
-  { product: "pesinho - para fliperama", value: 800 },
-  { product: "Fliperama metal - 2 players", value: 400 },
-];
-
-const recentSales = [
-  { product: "controle metal - 2 players", qty: 2, value: "R$ 1.222,54", profit: "R$ 1.440,50" },
-  { product: "controle metal - 2 players", qty: 2, value: "R$ 1.222,54", profit: "R$ 1.440,50" },
-  { product: "Fliperama metal - 1player", qty: 1, value: "R$ 550,00", profit: "R$ 1.200,00" },
-  { product: "Fliperama metal - 2 players", qty: 5, value: "R$ 4.318,35", profit: "R$ 1.280,60" },
-  { product: "trava lateral - para fliperama", qty: 200, value: "R$ 2000,00", profit: "R$ 1.600,00" },
-];
-
-const recentServices = [
-  { name: "Injeção de Peças Plásticas", client: "teste teste teste", qty: 1, value: "R$ 0,00", hours: "5.000Hrs" },
-];
 
 export default function Dashboard() {
   const { saldoCaixa, totalEntradas, totalSaidas, entradasCaixa, isLoading } = useDashboardData();
@@ -40,8 +21,19 @@ export default function Dashboard() {
     },
   });
 
-  const { data: sales = [] } = useQuery({
-    queryKey: ['dashboard-sales-month'],
+  // Buscar todas as vendas para calcular produtos mais vendidos
+  const { data: allSales = [] } = useQuery({
+    queryKey: ['dashboard-all-sales'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('sales').select('*');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Buscar vendas recentes
+  const { data: recentSalesData = [] } = useQuery({
+    queryKey: ['dashboard-recent-sales'],
     queryFn: async () => {
       const { data, error } = await supabase.from('sales').select('*').order('sale_date', { ascending: false }).limit(5);
       if (error) throw error;
@@ -49,16 +41,49 @@ export default function Dashboard() {
     },
   });
 
-  // Calcular produtos mais vendidos
-  const topProducts = sales.reduce((acc: any[], sale: any) => {
+  // Calcular produtos mais vendidos baseado em quantidade total vendida
+  const topProducts = allSales.reduce((acc: any[], sale: any) => {
     const existing = acc.find(item => item.product === sale.product_name);
     if (existing) {
-      existing.value += sale.total_revenue || 0;
+      existing.value += sale.quantity || 0;
     } else {
-      acc.push({ product: sale.product_name, value: sale.total_revenue || 0 });
+      acc.push({ product: sale.product_name, value: sale.quantity || 0 });
     }
     return acc;
   }, []).sort((a, b) => b.value - a.value).slice(0, 5);
+
+  // Buscar vendas do mês de outubro
+  const { data: octoberSales = [] } = useQuery({
+    queryKey: ['dashboard-october-sales'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sales')
+        .select('*')
+        .gte('sale_date', '2025-10-01')
+        .lte('sale_date', '2025-10-31');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Buscar despesas de outubro
+  const { data: octoberExpenses = [] } = useQuery({
+    queryKey: ['dashboard-october-expenses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .gte('expense_date', '2025-10-01')
+        .lte('expense_date', '2025-10-31');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Calcular totais de outubro
+  const octoberRevenue = octoberSales.reduce((sum, sale) => sum + (sale.total_revenue || 0), 0);
+  const octoberCost = octoberExpenses.reduce((sum, expense) => sum + (expense.value || 0), 0);
+  const octoberProfit = octoberSales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
 
   const { data: services = [] } = useQuery({
     queryKey: ['dashboard-services'],
@@ -130,15 +155,15 @@ export default function Dashboard() {
         />
         <MetricCard
           title="Lucro Líquido"
-          subtitle="[total]"
-          value="R$ 2781,96"
+          subtitle="[mês atual]"
+          value={isLoading ? "Carregando..." : `R$ ${(totalEntradas - totalSaidas).toFixed(2)}`}
           icon={TrendingUp}
           variant="purple"
         />
         <MetricCard
           title="Total Despesas"
-          subtitle="[total]"
-          value="R$ 4400,00"
+          subtitle="[mês atual]"
+          value={isLoading ? "Carregando..." : `R$ ${totalSaidas.toFixed(2)}`}
           icon={TrendingDown}
           variant="destructive"
         />
@@ -165,16 +190,16 @@ export default function Dashboard() {
           <div className="grid grid-cols-3 gap-6">
             <div>
               <p className="text-sm opacity-90">Faturado do Mês</p>
-              <p className="text-3xl font-bold">R$ 13592,41</p>
+              <p className="text-3xl font-bold">R$ {octoberRevenue.toFixed(2)}</p>
             </div>
             <div>
               <p className="text-sm opacity-90">Despesas do Mês</p>
-              <p className="text-3xl font-bold">R$ 0,00</p>
+              <p className="text-3xl font-bold">R$ {octoberCost.toFixed(2)}</p>
             </div>
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-sm opacity-90">Lucro Líquido do Mês</p>
-                <p className="text-3xl font-bold">R$ 7181,96</p>
+                <p className="text-3xl font-bold">R$ {octoberProfit.toFixed(2)}</p>
               </div>
               <Button variant="secondary" className="gap-2">
                 Ver Relatório Completo
@@ -205,7 +230,7 @@ export default function Dashboard() {
               className="h-[300px]"
             >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topProducts.length > 0 ? topProducts : chartData}>
+                <BarChart data={topProducts}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="product"
@@ -233,10 +258,10 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {sales.length === 0 ? (
+              {recentSalesData.length === 0 ? (
                 <p className="text-center text-muted-foreground">Nenhuma venda recente</p>
               ) : (
-                sales.map((sale: any) => (
+                recentSalesData.map((sale: any) => (
                   <div key={sale.id} className="flex items-center justify-between py-2 border-b last:border-0">
                     <div className="flex-1">
                       <p className="font-medium text-sm">{sale.product_name}</p>
