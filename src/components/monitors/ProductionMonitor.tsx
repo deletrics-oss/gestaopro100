@@ -13,7 +13,8 @@ type ViewType = 'pending' | 'in_progress' | 'completed';
 
 export function ProductionMonitor() {
   const [currentView, setCurrentView] = useState<ViewType>("pending");
-  const { playAlert, alertMode } = useSoundAlert();
+  const { playAlert, alertMode, selectedSounds } = useSoundAlert();
+  const [slideSpeed, setSlideSpeed] = useState(6000);
   
   const views: ViewType[] = ['pending', 'in_progress', 'completed'];
   
@@ -24,9 +25,9 @@ export function ProductionMonitor() {
         const nextIndex = (currentIndex + 1) % views.length;
         return views[nextIndex];
       });
-    }, 6000);
+    }, slideSpeed);
     return () => clearInterval(interval);
-  }, [views]);
+  }, [slideSpeed]);
 
   const { data: orders = [], dataUpdatedAt } = useQuery({
     queryKey: ['production-monitor'],
@@ -47,9 +48,10 @@ export function ProductionMonitor() {
 
   useEffect(() => {
     if (pendingOrders.length > 0 && alertMode !== 'disabled') {
-      playAlert('atencao_maquina');
+      const sound = selectedSounds['production'] || 'atencao_maquina';
+      playAlert(sound);
     }
-  }, [dataUpdatedAt, alertMode, playAlert]);
+  }, [dataUpdatedAt, alertMode, playAlert, selectedSounds]);
 
   const getViewTitle = () => {
     switch(currentView) {
@@ -77,7 +79,7 @@ export function ProductionMonitor() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-      <MonitorAudioControls context="production" />
+      <MonitorAudioControls context="production" onSpeedChange={setSlideSpeed} />
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-4 mb-4">

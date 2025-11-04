@@ -89,21 +89,21 @@ export default function Dashboard() {
         <div className="flex gap-2">
           <Button 
             variant="outline" 
-            className="gap-2"
+            className="gap-2 border-yellow-500 text-yellow-600 hover:bg-yellow-50"
             onClick={() => openMonitor('products')}
           >
-            <Package className="h-4 w-4" />
+            <Package className="h-4 w-4 text-yellow-500" />
             Monitor Produtos
           </Button>
           <Button 
-            className="gap-2 bg-purple text-purple-foreground hover:bg-purple/90"
+            className="gap-2 bg-purple-600 text-white hover:bg-purple-700"
             onClick={() => openMonitor('production')}
           >
             <ShoppingCart className="h-4 w-4" />
             Monitor Produção
           </Button>
           <Button 
-            className="gap-2"
+            className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
             onClick={() => openMonitor('management')}
           >
             <TrendingUp className="h-4 w-4" />

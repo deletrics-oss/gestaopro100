@@ -18,9 +18,15 @@ const SOUND_OPTIONS = [
   { value: 'estoque_baixo', label: 'Estoque Baixo' },
 ];
 
-export function MonitorAudioControls({ context }: MonitorAudioControlsProps) {
+export function MonitorAudioControls({ context, onSpeedChange }: MonitorAudioControlsProps & { onSpeedChange?: (speed: number) => void }) {
   const { alertMode, setAlertMode, selectedSounds, setSelectedSound, testSound } = useSoundAlert();
   const [showSettings, setShowSettings] = useState(false);
+  const [slideSpeed, setSlideSpeed] = useState(6000);
+
+  const handleSpeedChange = (speed: number) => {
+    setSlideSpeed(speed);
+    onSpeedChange?.(speed);
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-50 space-y-2">
@@ -103,6 +109,38 @@ export function MonitorAudioControls({ context }: MonitorAudioControlsProps) {
               <Volume2 className="w-4 h-4 mr-2" />
               Testar Som
             </Button>
+
+            {onSpeedChange && (
+              <div className="space-y-2 pt-3 border-t border-slate-600">
+                <Label className="text-white">Velocidade dos Slides</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={slideSpeed === 3000 ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleSpeedChange(3000)}
+                    className="flex-1"
+                  >
+                    Rápido (3s)
+                  </Button>
+                  <Button
+                    variant={slideSpeed === 6000 ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleSpeedChange(6000)}
+                    className="flex-1"
+                  >
+                    Normal (6s)
+                  </Button>
+                  <Button
+                    variant={slideSpeed === 10000 ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleSpeedChange(10000)}
+                    className="flex-1"
+                  >
+                    Lento (10s)
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

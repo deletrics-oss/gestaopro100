@@ -13,7 +13,8 @@ type ViewType = 'critical' | 'low_stock' | 'purchase_list';
 
 export function ProductsMonitor() {
   const [currentView, setCurrentView] = useState<ViewType>("critical");
-  const { playAlert, alertMode } = useSoundAlert();
+  const { playAlert, alertMode, selectedSounds } = useSoundAlert();
+  const [slideSpeed, setSlideSpeed] = useState(6000);
   
   const views: ViewType[] = ['critical', 'low_stock', 'purchase_list'];
   
@@ -24,9 +25,9 @@ export function ProductsMonitor() {
         const nextIndex = (currentIndex + 1) % views.length;
         return views[nextIndex];
       });
-    }, 6000);
+    }, slideSpeed);
     return () => clearInterval(interval);
-  }, [views]);
+  }, [slideSpeed]);
 
   const { data: products = [], dataUpdatedAt } = useQuery({
     queryKey: ['products-monitor'],
@@ -53,9 +54,10 @@ export function ProductsMonitor() {
 
   useEffect(() => {
     if (criticalStock.length > 0 && alertMode !== 'disabled') {
-      playAlert('estoque_baixo');
+      const sound = selectedSounds['products'] || 'estoque_baixo';
+      playAlert(sound);
     }
-  }, [dataUpdatedAt, alertMode, playAlert]);
+  }, [dataUpdatedAt, alertMode, playAlert, selectedSounds]);
 
   const getViewTitle = () => {
     switch(currentView) {
@@ -83,7 +85,7 @@ export function ProductsMonitor() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-yellow-900 to-slate-900 p-8">
-      <MonitorAudioControls context="products" />
+      <MonitorAudioControls context="products" onSpeedChange={setSlideSpeed} />
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-4 mb-4">

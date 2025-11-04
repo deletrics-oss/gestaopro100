@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Wallet, TrendingUp, TrendingDown, DollarSign, Plus, Copy } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, DollarSign, Plus, Copy, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { CopyButton } from "@/components/CopyButton";
 import { supabase } from "@/lib/supabase";
@@ -17,6 +17,7 @@ export default function GestaoCaixa() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [selectedMovements, setSelectedMovements] = useState<string[]>([]);
+  const [editingMovement, setEditingMovement] = useState<any>(null);
 
   // Buscar movimentações de caixa
   const { data: cashMovements = [] } = useQuery({
@@ -58,8 +59,43 @@ export default function GestaoCaixa() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cash-movements'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
       toast.success("Movimentação registrada!");
       setShowForm(false);
+      setEditingMovement(null);
+    },
+  });
+
+  // Mutation para atualizar movimentação
+  const updateMovement = useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await supabase.from('expenses').update({
+        description: data.type === 'entrada' ? `Entrada: ${data.description}` : `Saída: ${data.description}`,
+        value: parseFloat(data.value),
+        payment_method: data.payment_method,
+        notes: data.notes
+      }).eq('id', data.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cash-movements'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+      toast.success("Movimentação atualizada!");
+      setShowForm(false);
+      setEditingMovement(null);
+    },
+  });
+
+  // Mutation para deletar movimentação
+  const deleteMovement = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('expenses').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cash-movements'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+      toast.success("Movimentação removida!");
     },
   });
 
@@ -70,14 +106,36 @@ export default function GestaoCaixa() {
     const category = formData.get('category') || 'Outros';
     const description = formData.get('description') || '';
     
-    createMovement.mutate({
-      type,
-      description: `${description}`,
-      value: formData.get('value'),
-      date: new Date().toISOString().split('T')[0],
-      payment_method: formData.get('payment_method'),
-      notes: `Categoria: ${category}`
-    });
+    if (editingMovement) {
+      updateMovement.mutate({
+        id: editingMovement.id,
+        type,
+        description: `${description}`,
+        value: formData.get('value'),
+        payment_method: formData.get('payment_method'),
+        notes: `Categoria: ${category}`
+      });
+    } else {
+      createMovement.mutate({
+        type,
+        description: `${description}`,
+        value: formData.get('value'),
+        date: new Date().toISOString().split('T')[0],
+        payment_method: formData.get('payment_method'),
+        notes: `Categoria: ${category}`
+      });
+    }
+  };
+
+  const handleEdit = (movement: any) => {
+    setEditingMovement(movement);
+    setShowForm(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Tem certeza que deseja remover esta movimentação?')) {
+      deleteMovement.mutate(id);
+    }
   };
 
   const handleCloneSelected = () => {
@@ -113,7 +171,10 @@ export default function GestaoCaixa() {
           </h1>
           <p className="text-muted-foreground">Controle completo de entradas e saídas - Dados salvos permanentemente</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+        <Button onClick={() => {
+          setEditingMovement(null);
+          setShowForm(!showForm);
+        }} className="gap-2">
           <Plus className="h-4 w-4" />
           Nova Movimentação
         </Button>
@@ -161,7 +222,7 @@ export default function GestaoCaixa() {
       {showForm && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Registrar Movimentação</CardTitle>
+            <CardTitle>{editingMovement ? 'Editar Movimentação' : 'Registrar Movimentação'}</CardTitle>
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -196,11 +257,13 @@ export default function GestaoCaixa() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="value">Valor *</Label>
-                  <Input id="value" name="value" type="number" step="0.01" placeholder="0,00" required />
+                  <Input id="value" name="value" type="number" step="0.01" placeholder="0,00" 
+                    defaultValue={editingMovement ? editingMovement.value : ''} required />
                 </div>
                 <div>
                   <Label htmlFor="category">Categoria *</Label>
-                  <select name="category" id="category" className="w-full p-2 border rounded" required>
+                  <select name="category" id="category" className="w-full p-2 border rounded" 
+                    defaultValue={editingMovement?.notes?.replace('Categoria: ', '')} required>
                     <option value="Outros">Outros</option>
                     <option value="Retirada">Retirada</option>
                     <option value="Deposito">Depósito</option>
@@ -212,12 +275,14 @@ export default function GestaoCaixa() {
               
               <div>
                 <Label htmlFor="description">Descrição</Label>
-                <Input id="description" name="description" placeholder="Detalhes da movimentação..." />
+                <Input id="description" name="description" placeholder="Detalhes da movimentação..." 
+                  defaultValue={editingMovement ? editingMovement.description?.replace('Entrada: ', '').replace('Saída: ', '') : ''} />
               </div>
               
               <div>
                 <Label htmlFor="payment_method">Método de Pagamento</Label>
-                <select name="payment_method" id="payment_method" className="w-full p-2 border rounded">
+                <select name="payment_method" id="payment_method" className="w-full p-2 border rounded"
+                  defaultValue={editingMovement?.payment_method}>
                   <option value="Dinheiro">Dinheiro</option>
                   <option value="PIX">PIX</option>
                   <option value="Cartão">Cartão</option>
@@ -287,6 +352,7 @@ export default function GestaoCaixa() {
                 <TableHead>Descrição</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Pagamento</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -322,6 +388,24 @@ export default function GestaoCaixa() {
                       {isEntrada ? '+' : '-'} R$ {movement.value?.toFixed(2)}
                     </TableCell>
                     <TableCell>{movement.payment_method || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(movement)}
+                        >
+                          <Pencil className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(movement.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })}

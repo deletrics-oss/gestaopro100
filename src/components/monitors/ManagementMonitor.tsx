@@ -36,6 +36,7 @@ type ViewType =
 export function ManagementMonitor() {
   const [currentView, setCurrentView] = useState<ViewType>("marketplace");
   const { playAlert } = useSoundAlert();
+  const [slideSpeed, setSlideSpeed] = useState(6000);
   
   const views: ViewType[] = [
     'marketplace',
@@ -57,9 +58,9 @@ export function ManagementMonitor() {
         const nextIndex = (currentIndex + 1) % views.length;
         return views[nextIndex];
       });
-    }, 6000);
+    }, slideSpeed);
     return () => clearInterval(interval);
-  }, [views]);
+  }, [slideSpeed]);
 
   const { data: expenses = [] } = useQuery({
     queryKey: ['expenses-monitor'],
@@ -274,7 +275,7 @@ export function ManagementMonitor() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 p-8">
-      <MonitorAudioControls context="management" />
+      <MonitorAudioControls context="management" onSpeedChange={setSlideSpeed} />
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-4 mb-4">
