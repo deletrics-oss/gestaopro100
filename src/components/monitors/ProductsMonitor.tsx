@@ -14,7 +14,7 @@ type ViewType = 'critical' | 'low_stock' | 'purchase_list';
 export function ProductsMonitor() {
   const [currentView, setCurrentView] = useState<ViewType>("critical");
   const { playAlert, alertMode, selectedSounds } = useSoundAlert();
-  const [slideSpeed, setSlideSpeed] = useState(6000);
+  const [slideSpeed, setSlideSpeed] = useState(3000); // Inicia em 3 segundos
   
   const views: ViewType[] = ['critical', 'low_stock', 'purchase_list'];
   

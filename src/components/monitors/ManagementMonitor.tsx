@@ -36,7 +36,7 @@ type ViewType =
 export function ManagementMonitor() {
   const [currentView, setCurrentView] = useState<ViewType>("marketplace");
   const { playAlert } = useSoundAlert();
-  const [slideSpeed, setSlideSpeed] = useState(6000);
+  const [slideSpeed, setSlideSpeed] = useState(3000); // Inicia em 3 segundos
   
   const views: ViewType[] = [
     'marketplace',

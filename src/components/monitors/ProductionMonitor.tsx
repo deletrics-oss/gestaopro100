@@ -14,7 +14,7 @@ type ViewType = 'pending' | 'in_progress' | 'completed';
 export function ProductionMonitor() {
   const [currentView, setCurrentView] = useState<ViewType>("pending");
   const { playAlert, alertMode, selectedSounds } = useSoundAlert();
-  const [slideSpeed, setSlideSpeed] = useState(6000);
+  const [slideSpeed, setSlideSpeed] = useState(3000); // Inicia em 3 segundos
   
   const views: ViewType[] = ['pending', 'in_progress', 'completed'];
   
