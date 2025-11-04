@@ -14,6 +14,7 @@ import { Trash2, Edit, Package, Copy, Plus, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { CopyButton } from "@/components/CopyButton";
 import { CSVImporter } from "@/components/CSVImporter";
+import { ProductComponentsManager } from "@/components/products/ProductComponentsManager";
 
 export default function Produtos() {
   const queryClient = useQueryClient();
@@ -21,6 +22,10 @@ export default function Produtos() {
   const [showForm, setShowForm] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showImporter, setShowImporter] = useState(false);
+  const [components, setComponents] = useState<any[]>([]);
+  const [materialCost, setMaterialCost] = useState(0);
+  const [laborCost, setLaborCost] = useState(0);
+  const [otherCosts, setOtherCosts] = useState(0);
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
@@ -80,13 +85,19 @@ export default function Produtos() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    
+    const componentsCost = components.reduce((sum, comp) => sum + Number(comp.cost), 0);
+    const totalCost = Number(materialCost) + Number(laborCost) + Number(otherCosts) + componentsCost;
+    const salePrice = parseFloat(formData.get('unit_price') as string) || 0;
+    const profitMargin = salePrice > 0 ? ((salePrice - totalCost) / salePrice * 100) : 0;
+
     const data = {
       name: formData.get('name'),
       sku: formData.get('sku'),
       description: formData.get('description'),
       category: formData.get('category'),
-      unit_price: parseFloat(formData.get('unit_price') as string) || 0,
-      cost_price: parseFloat(formData.get('cost_price') as string) || 0,
+      unit_price: salePrice,
+      cost_price: totalCost,
       stock_quantity: parseInt(formData.get('stock_quantity') as string) || 0,
       minimum_stock: parseInt(formData.get('minimum_stock') as string) || 0,
       location: formData.get('location'),
@@ -98,6 +109,17 @@ export default function Produtos() {
       updateMutation.mutate({ id: editingProduct.id, data });
     } else {
       createMutation.mutate(data);
+    }
+
+    // Salvar componentes no Lovable Cloud
+    if (components.length > 0) {
+      components.forEach(async (comp) => {
+        await supabase.from('product_components').insert({
+          name: comp.name,
+          description: comp.description,
+          cost: comp.cost,
+        });
+      });
     }
   };
 
@@ -240,13 +262,92 @@ export default function Produtos() {
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {/* Preview do Cálculo */}
+                <div className="md:col-span-2">
+                  <Card className="bg-muted/50">
+                    <CardContent className="pt-4">
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Material</p>
+                          <p className="font-semibold">R$ {Number(materialCost).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Mão de Obra</p>
+                          <p className="font-semibold">R$ {Number(laborCost).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Outros</p>
+                          <p className="font-semibold">R$ {Number(otherCosts).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Componentes</p>
+                          <p className="font-semibold">R$ {components.reduce((sum, comp) => sum + Number(comp.cost), 0).toFixed(2)}</p>
+                        </div>
+                        <div className="col-span-2 border-t pt-2">
+                          <p className="text-muted-foreground">Custo Total</p>
+                          <p className="text-xl font-bold text-primary">
+                            R$ {(Number(materialCost) + Number(laborCost) + Number(otherCosts) + components.reduce((sum, comp) => sum + Number(comp.cost), 0)).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label>Custo de Material (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={materialCost}
+                    onChange={(e) => setMaterialCost(Number(e.target.value))}
+                  />
+                </div>
+
+                <div>
+                  <Label>Custo de Mão de Obra (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={laborCost}
+                    onChange={(e) => setLaborCost(Number(e.target.value))}
+                  />
+                </div>
+
+                <div>
+                  <Label>Outros Custos (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={otherCosts}
+                    onChange={(e) => setOtherCosts(Number(e.target.value))}
+                  />
+                </div>
+
+                {/* Gerenciador de Componentes */}
+                <div className="md:col-span-2">
+                  <ProductComponentsManager 
+                    components={components}
+                    onChange={setComponents}
+                  />
+                </div>
+
                 <div>
                   <Label htmlFor="unit_price">Preço de Venda *</Label>
                   <Input id="unit_price" name="unit_price" type="number" step="0.01" defaultValue={editingProduct?.unit_price} required />
                 </div>
                 <div>
-                  <Label htmlFor="cost_price">Preço de Custo *</Label>
-                  <Input id="cost_price" name="cost_price" type="number" step="0.01" defaultValue={editingProduct?.cost_price} required />
+                  <Label htmlFor="cost_price">Preço de Custo (Calculado Automaticamente)</Label>
+                  <Input 
+                    id="cost_price" 
+                    name="cost_price" 
+                    type="number" 
+                    step="0.01" 
+                    value={(Number(materialCost) + Number(laborCost) + Number(otherCosts) + components.reduce((sum, comp) => sum + Number(comp.cost), 0)).toFixed(2)}
+                    readOnly
+                    className="bg-muted"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="stock_quantity">Qtd. em Estoque *</Label>
