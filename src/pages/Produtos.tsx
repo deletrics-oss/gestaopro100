@@ -262,8 +262,45 @@ export default function Produtos() {
                     </SelectContent>
                   </Select>
                 </div>
-                
-                {/* Preview do Cálculo */}
+
+                {/* Custos acima da categoria */}
+                <div>
+                  <Label>Custo de Material (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={materialCost}
+                    onChange={(e) => setMaterialCost(Number(e.target.value))}
+                  />
+                </div>
+                <div>
+                  <Label>Custo de Mão de Obra (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={laborCost}
+                    onChange={(e) => setLaborCost(Number(e.target.value))}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Outros Custos (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={otherCosts}
+                    onChange={(e) => setOtherCosts(Number(e.target.value))}
+                  />
+                </div>
+
+                {/* Gerenciador de Componentes */}
+                <div className="md:col-span-2">
+                  <ProductComponentsManager 
+                    components={components}
+                    onChange={setComponents}
+                  />
+                </div>
+
+                {/* Preview do Cálculo EMBAIXO */}
                 <div className="md:col-span-2">
                   <Card className="bg-muted/50">
                     <CardContent className="pt-4">
@@ -293,44 +330,6 @@ export default function Produtos() {
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label>Custo de Material (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={materialCost}
-                    onChange={(e) => setMaterialCost(Number(e.target.value))}
-                  />
-                </div>
-
-                <div>
-                  <Label>Custo de Mão de Obra (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={laborCost}
-                    onChange={(e) => setLaborCost(Number(e.target.value))}
-                  />
-                </div>
-
-                <div>
-                  <Label>Outros Custos (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={otherCosts}
-                    onChange={(e) => setOtherCosts(Number(e.target.value))}
-                  />
-                </div>
-
-                {/* Gerenciador de Componentes */}
-                <div className="md:col-span-2">
-                  <ProductComponentsManager 
-                    components={components}
-                    onChange={setComponents}
-                  />
                 </div>
 
                 <div>

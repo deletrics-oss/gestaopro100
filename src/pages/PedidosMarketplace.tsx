@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,11 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Edit, ShoppingBag, Copy, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useSoundAlert } from "@/contexts/SoundAlertContext";
 
 export default function PedidosMarketplace() {
   const queryClient = useQueryClient();
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
+  const { playAlert } = useSoundAlert();
+  const [previousOrderCount, setPreviousOrderCount] = useState(0);
 
   const { data: orders = [] } = useQuery({
     queryKey: ['marketplace-orders'],
@@ -28,6 +31,14 @@ export default function PedidosMarketplace() {
       return data || [];
     },
   });
+
+  // Tocar áudio automaticamente ao chegar novo pedido
+  useEffect(() => {
+    if (orders.length > previousOrderCount && previousOrderCount > 0) {
+      playAlert('novo_pedido');
+    }
+    setPreviousOrderCount(orders.length);
+  }, [orders.length]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
