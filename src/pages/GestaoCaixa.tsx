@@ -33,24 +33,27 @@ export default function GestaoCaixa() {
     },
   });
 
-  // Calcular totais
+  // Calcular totais (entradas tem valor negativo no banco)
   const totalEntradas = cashMovements
     .filter((m: any) => m.description?.startsWith('Entrada'))
-    .reduce((sum: number, m: any) => sum + (m.value || 0), 0);
+    .reduce((sum: number, m: any) => sum + Math.abs(m.value || 0), 0);
   
   const totalSaidas = cashMovements
     .filter((m: any) => m.description?.startsWith('Saída'))
-    .reduce((sum: number, m: any) => sum + (m.value || 0), 0);
+    .reduce((sum: number, m: any) => sum + Math.abs(m.value || 0), 0);
   
   const saldo = totalEntradas - totalSaidas;
 
   // Mutation para criar movimentação
   const createMovement = useMutation({
     mutationFn: async (data: any) => {
+      // Para entrada, salvar com valor NEGATIVO para não contar como despesa
+      const adjustedValue = data.type === 'entrada' ? -Math.abs(parseFloat(data.value)) : Math.abs(parseFloat(data.value));
+      
       const { error } = await supabase.from('expenses').insert([{
         category: 'Movimentação Caixa',
         description: data.type === 'entrada' ? `Entrada: ${data.description}` : `Saída: ${data.description}`,
-        value: parseFloat(data.value),
+        value: adjustedValue,
         expense_date: data.date,
         payment_method: data.payment_method,
         notes: data.notes
@@ -60,6 +63,7 @@ export default function GestaoCaixa() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cash-movements'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-cash-movements'] });
       toast.success("Movimentação registrada!");
       setShowForm(false);
       setEditingMovement(null);

@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 
 
 export default function Dashboard() {
-  const { saldoCaixa, totalEntradas, totalSaidas, entradasCaixa, isLoading } = useDashboardData();
+  const { saldoCaixa, totalEntradas, totalSaidas, entradasCaixa, isLoading, sales } = useDashboardData();
   
   const { data: products = [] } = useQuery({
     queryKey: ['dashboard-products'],
@@ -52,38 +52,10 @@ export default function Dashboard() {
     return acc;
   }, []).sort((a, b) => b.value - a.value).slice(0, 5);
 
-  // Buscar vendas do mês de outubro
-  const { data: octoberSales = [] } = useQuery({
-    queryKey: ['dashboard-october-sales'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('sales')
-        .select('*')
-        .gte('sale_date', '2025-10-01')
-        .lte('sale_date', '2025-10-31');
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Buscar despesas de outubro
-  const { data: octoberExpenses = [] } = useQuery({
-    queryKey: ['dashboard-october-expenses'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .gte('expense_date', '2025-10-01')
-        .lte('expense_date', '2025-10-31');
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Calcular totais de outubro
-  const octoberRevenue = octoberSales.reduce((sum, sale) => sum + (sale.total_revenue || 0), 0);
-  const octoberCost = octoberExpenses.reduce((sum, expense) => sum + (expense.value || 0), 0);
-  const octoberProfit = octoberSales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+  // Calcular totais do mês atual (baseado nos dados já carregados)
+  const currentMonthRevenue = totalEntradas;
+  const currentMonthCost = totalSaidas;
+  const currentMonthProfit = sales.reduce((sum: number, sale: any) => sum + (sale.profit || 0), 0);
 
   const { data: services = [] } = useQuery({
     queryKey: ['dashboard-services'],
@@ -140,23 +112,23 @@ export default function Dashboard() {
       {/* Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          title="Saldo em Caixa"
+          title="Total Vendas"
           subtitle="[mês atual]"
-          value={isLoading ? "Carregando..." : `R$ ${saldoCaixa.toFixed(2)}`}
-          icon={Wallet}
+          value={isLoading ? "Carregando..." : `R$ ${totalEntradas.toFixed(2)}`}
+          icon={TrendingUp}
           variant="success"
         />
         <MetricCard
-          title="Entradas de Caixa"
-          subtitle="[gestão manual]"
+          title="Gestão de Caixa"
+          subtitle="[entradas manuais]"
           value={isLoading ? "Carregando..." : `R$ ${entradasCaixa.toFixed(2)}`}
-          icon={TrendingUp}
+          icon={Wallet}
           variant="info"
         />
         <MetricCard
           title="Lucro Líquido"
           subtitle="[mês atual]"
-          value={isLoading ? "Carregando..." : `R$ ${(totalEntradas - totalSaidas).toFixed(2)}`}
+          value={isLoading ? "Carregando..." : `R$ ${currentMonthProfit.toFixed(2)}`}
           icon={TrendingUp}
           variant="purple"
         />
@@ -183,23 +155,23 @@ export default function Dashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Resumo de outubro
+            Resumo do Mês Atual
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-6">
             <div>
-              <p className="text-sm opacity-90">Faturado do Mês</p>
-              <p className="text-3xl font-bold">R$ {octoberRevenue.toFixed(2)}</p>
+              <p className="text-sm opacity-90">Total em Vendas</p>
+              <p className="text-3xl font-bold">R$ {currentMonthRevenue.toFixed(2)}</p>
             </div>
             <div>
               <p className="text-sm opacity-90">Despesas do Mês</p>
-              <p className="text-3xl font-bold">R$ {octoberCost.toFixed(2)}</p>
+              <p className="text-3xl font-bold">R$ {currentMonthCost.toFixed(2)}</p>
             </div>
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-sm opacity-90">Lucro Líquido do Mês</p>
-                <p className="text-3xl font-bold">R$ {octoberProfit.toFixed(2)}</p>
+                <p className="text-sm opacity-90">Total do Lucro</p>
+                <p className="text-3xl font-bold">R$ {currentMonthProfit.toFixed(2)}</p>
               </div>
               <Button variant="secondary" className="gap-2">
                 Ver Relatório Completo

@@ -106,7 +106,7 @@ export default function Estoque() {
     const data = {
       name: formData.get('name'),
       sku: formData.get('sku'),
-      category: formData.get('category'),
+      category: formData.get('category') as string,
       stock_quantity: Number(formData.get('stock_quantity')),
       minimum_stock: Number(formData.get('minimum_stock')),
       cost_price: Number(formData.get('cost_price')),
@@ -116,14 +116,22 @@ export default function Estoque() {
     };
 
     if (editingProduct) {
-      supabase.from('products').update(data).eq('id', editingProduct.id).then(() => {
+      supabase.from('products').update(data).eq('id', editingProduct.id).then(({ error }) => {
+        if (error) {
+          toast.error("Erro ao atualizar: " + error.message);
+          return;
+        }
         queryClient.invalidateQueries({ queryKey: ['products-stock'] });
         toast.success("Produto atualizado");
         setShowForm(false);
         setEditingProduct(null);
       });
     } else {
-      supabase.from('products').insert([data]).then(() => {
+      supabase.from('products').insert([data]).then(({ error }) => {
+        if (error) {
+          toast.error("Erro ao cadastrar: " + error.message);
+          return;
+        }
         queryClient.invalidateQueries({ queryKey: ['products-stock'] });
         toast.success("Produto cadastrado");
         setShowForm(false);
@@ -156,37 +164,27 @@ export default function Estoque() {
                   <Input name="name" defaultValue={editingProduct?.name} required />
                 </div>
                 <div>
-                  <Label>Categoria</Label>
-                  <Select name="category" defaultValue={editingProduct?.category || 'Matéria Prima'}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Matéria Prima">Matéria Prima</SelectItem>
-                      <SelectItem value="Acabamento">Acabamento</SelectItem>
-                      <SelectItem value="Embalagem">Embalagem</SelectItem>
-                      <SelectItem value="Ferramentas">Ferramentas</SelectItem>
-                      <SelectItem value="Outros">Outros</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Categoria *</Label>
+                  <select name="category" className="w-full px-3 py-2 border rounded-md bg-background" defaultValue={editingProduct?.category || 'Matéria Prima'} required>
+                    <option value="Matéria Prima">Matéria Prima</option>
+                    <option value="Acabamento">Acabamento</option>
+                    <option value="Embalagem">Embalagem</option>
+                    <option value="Ferramentas">Ferramentas</option>
+                    <option value="Outros">Outros</option>
+                  </select>
                 </div>
                 <div>
-                  <Label>Unidade</Label>
-                  <Select name="unit" defaultValue="Unidade">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Unidade">Unidade</SelectItem>
-                      <SelectItem value="Metro">Metro</SelectItem>
-                      <SelectItem value="Kg">Kg</SelectItem>
-                      <SelectItem value="Litro">Litro</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Unidade *</Label>
+                  <select name="unit" className="w-full px-3 py-2 border rounded-md bg-background" defaultValue={editingProduct?.unit || 'Unidade'} required>
+                    <option value="Unidade">Unidade</option>
+                    <option value="Metro">Metro</option>
+                    <option value="Kg">Kg</option>
+                    <option value="Litro">Litro</option>
+                  </select>
                 </div>
                 <div>
-                  <Label>Quantidade</Label>
-                  <Input type="number" name="stock_quantity" defaultValue={editingProduct?.stock_quantity || 0} />
+                  <Label>Quantidade *</Label>
+                  <Input type="number" name="stock_quantity" defaultValue={editingProduct?.stock_quantity || 0} required />
                 </div>
                 <div>
                   <Label>Estoque Mínimo</Label>
@@ -198,7 +196,7 @@ export default function Estoque() {
                 </div>
                 <div>
                   <Label>Fornecedor</Label>
-                  <Input name="supplier" placeholder="Nome do fornecedor" />
+                  <Input name="supplier_name" defaultValue={editingProduct?.supplier_name} placeholder="Nome do fornecedor" />
                 </div>
                 <div>
                   <Label>Localização</Label>

@@ -88,6 +88,19 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 
+  /* Fix para texto de estoque baixo em dark mode */
+  .dark .text-yellow-800 {
+    @apply text-yellow-200;
+  }
+
+  .dark .bg-yellow-50 {
+    @apply bg-yellow-950;
+  }
+
+  .dark .border-yellow-300 {
+    @apply border-yellow-700;
+  }
+
   /* Sidebar styles for better contrast in light mode */
   :root [data-sidebar] {
     --tw-text-opacity: 1;

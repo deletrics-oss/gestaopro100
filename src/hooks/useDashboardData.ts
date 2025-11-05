@@ -51,10 +51,10 @@ export function useDashboardData() {
   const totalSaidas = expenses.reduce((sum: number, e: any) => sum + (e.value || 0), 0);
   const saldoCaixa = totalEntradas - totalSaidas;
 
-  // Calcular entradas de caixa manual
+  // Calcular entradas de caixa manual (valores são negativos no banco)
   const entradasCaixa = cashMovements
     .filter((m: any) => m.description?.startsWith('Entrada'))
-    .reduce((sum: number, m: any) => sum + (m.value || 0), 0);
+    .reduce((sum: number, m: any) => sum + Math.abs(m.value || 0), 0);
 
   return {
     sales,

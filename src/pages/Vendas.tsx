@@ -191,7 +191,7 @@ export default function Vendas() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <Label>Produto *</Label>
                   <Select name="product_id" defaultValue={editingSale?.product_id || ''}>
@@ -210,8 +210,8 @@ export default function Vendas() {
                   <Input name="product_name" defaultValue={editingSale?.product_name} required />
                 </div>
                 <div>
-                  <Label>Cliente</Label>
-                  <Select name="customer_id" defaultValue={editingSale?.customer_id || ''}>
+                  <Label>Cliente *</Label>
+                  <Select name="customer_id" defaultValue={editingSale?.customer_id || ''} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o cliente" />
                     </SelectTrigger>
@@ -221,6 +221,10 @@ export default function Vendas() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label>Nome do Cliente *</Label>
+                  <Input name="customer_name" defaultValue={editingSale?.customer_name} required placeholder="Nome completo" />
                 </div>
               </div>
 

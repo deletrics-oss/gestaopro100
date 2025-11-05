@@ -212,10 +212,10 @@ export default function Producao() {
                   <Input name="order_number" defaultValue={editingOrder?.order_number || `OP${Date.now()}`} required />
                 </div>
                 <div>
-                  <Label>Produto *</Label>
+                  <Label>Produto</Label>
                   <Select name="product_id" defaultValue={editingOrder?.product_id || ''}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o produto" />
+                      <SelectValue placeholder="Selecione (opcional)" />
                     </SelectTrigger>
                     <SelectContent>
                       {products.map((p: any) => (
@@ -226,7 +226,7 @@ export default function Producao() {
                 </div>
                 <div>
                   <Label>Nome do Produto *</Label>
-                  <Input name="product_name" defaultValue={editingOrder?.product_name} required />
+                  <Input name="product_name" defaultValue={editingOrder?.product_name} required placeholder="Preencha este campo" />
                 </div>
               </div>
 
