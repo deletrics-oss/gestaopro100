@@ -24,7 +24,6 @@ export function useDashboardData() {
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .neq('category', 'Movimentação Caixa')
         .gte('expense_date', format(startOfMonth(currentMonth), 'yyyy-MM-dd'))
         .lte('expense_date', format(endOfMonth(currentMonth), 'yyyy-MM-dd'));
       if (error) throw error;
@@ -37,12 +36,11 @@ export function useDashboardData() {
     queryKey: ['dashboard-cash-movements'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('expenses')
+        .from('cash_movements')
         .select('*')
-        .eq('category', 'Movimentação Caixa')
-        .gte('expense_date', format(startOfMonth(currentMonth), 'yyyy-MM-dd'))
-        .lte('expense_date', format(endOfMonth(currentMonth), 'yyyy-MM-dd'))
-        .order('expense_date', { ascending: false });
+        .gte('movement_date', format(startOfMonth(currentMonth), 'yyyy-MM-dd'))
+        .lte('movement_date', format(endOfMonth(currentMonth), 'yyyy-MM-dd'))
+        .order('movement_date', { ascending: false });
       if (error) throw error;
       return data || [];
     },
@@ -52,13 +50,13 @@ export function useDashboardData() {
   const totalDespesasMes = expenses.reduce((sum: number, e: any) => sum + (e.value || 0), 0);
   const totalLucroMes = sales.reduce((sum: number, s: any) => sum + (s.profit || 0), 0);
 
-  // Calcular gestão de caixa (valores são negativos no banco para entradas)
+  // Calcular gestão de caixa
   const entradasCaixa = cashMovements
-    .filter((m: any) => m.value < 0)
-    .reduce((sum: number, m: any) => sum + Math.abs(m.value || 0), 0);
+    .filter((m: any) => m.type === 'entrada')
+    .reduce((sum: number, m: any) => sum + (m.value || 0), 0);
   
   const saidasCaixa = cashMovements
-    .filter((m: any) => m.value > 0)
+    .filter((m: any) => m.type === 'saida')
     .reduce((sum: number, m: any) => sum + (m.value || 0), 0);
   
   const saldoCaixa = entradasCaixa - saidasCaixa;

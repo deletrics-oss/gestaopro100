@@ -28,6 +28,9 @@ import NotFound from "./pages/NotFound";
 import MonitorProducao from "./pages/MonitorProducao";
 import MonitorProdutos from "./pages/MonitorProdutos";
 import MonitorGestao from "./pages/MonitorGestao";
+import MonitorVendas from "./pages/MonitorVendas";
+import MonitorServicos from "./pages/MonitorServicos";
+import MonitorEstoque from "./pages/MonitorEstoque";
 
 const App = () => (
   <TooltipProvider>
@@ -57,6 +60,9 @@ const App = () => (
       <Route path="/monitor-producao" element={<MonitorProducao />} />
       <Route path="/monitor-produtos" element={<MonitorProdutos />} />
       <Route path="/monitor-gestao" element={<MonitorGestao />} />
+      <Route path="/monitor-vendas" element={<MonitorVendas />} />
+      <Route path="/monitor-servicos" element={<MonitorServicos />} />
+      <Route path="/monitor-estoque" element={<MonitorEstoque />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </TooltipProvider>

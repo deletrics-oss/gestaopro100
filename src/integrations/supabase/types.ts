@@ -44,6 +44,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_movements: {
+        Row: {
+          category: string | null
+          created_date: string | null
+          description: string
+          id: string
+          movement_date: string
+          notes: string | null
+          payment_method: string | null
+          type: string
+          updated_date: string | null
+          value: number
+        }
+        Insert: {
+          category?: string | null
+          created_date?: string | null
+          description: string
+          id?: string
+          movement_date?: string
+          notes?: string | null
+          payment_method?: string | null
+          type: string
+          updated_date?: string | null
+          value: number
+        }
+        Update: {
+          category?: string | null
+          created_date?: string | null
+          description?: string
+          id?: string
+          movement_date?: string
+          notes?: string | null
+          payment_method?: string | null
+          type?: string
+          updated_date?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null

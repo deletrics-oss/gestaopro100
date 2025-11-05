@@ -1,7 +1,7 @@
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, TrendingUp, TrendingDown, Package, ShoppingCart, Wrench, ArrowRight } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, Package, ShoppingCart, Wrench, ArrowRight, Factory } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -82,13 +82,18 @@ export default function Dashboard() {
     },
   });
 
-  const openMonitor = (type: 'production' | 'products' | 'management') => {
+  const openMonitor = (type: 'production' | 'products' | 'management' | 'sales' | 'services' | 'stock') => {
     const routes = {
       production: '/monitor-producao',
       products: '/monitor-produtos',
-      management: '/monitor-gestao'
+      management: '/monitor-gestao',
+      sales: '/monitor-vendas',
+      services: '/monitor-servicos',
+      stock: '/monitor-estoque'
     };
-    window.open(routes[type], '_blank', 'width=1400,height=900');
+    const size = { width: 1920, height: 1080 };
+    const params = `width=${size.width},height=${size.height},left=0,top=0,menubar=no,toolbar=no,location=no,status=no`;
+    window.open(routes[type], '_blank', params);
   };
 
   return (
@@ -99,21 +104,21 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Visão geral do seu negócio em tempo real</p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="gap-2 border-yellow-500 text-yellow-600 hover:bg-yellow-50"
-            onClick={() => openMonitor('products')}
-          >
-            <Package className="h-4 w-4 text-yellow-500" />
-            Monitor Produtos
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => openMonitor('production')} className="gap-2" variant="outline">
+            <Factory className="h-4 w-4" /> Monitor Produção
           </Button>
-          <Button 
-            className="gap-2 bg-purple-600 text-white hover:bg-purple-700"
-            onClick={() => openMonitor('production')}
-          >
-            <ShoppingCart className="h-4 w-4" />
-            Monitor Produção
+          <Button onClick={() => openMonitor('products')} className="gap-2" variant="outline">
+            <Package className="h-4 w-4" /> Monitor Produtos
+          </Button>
+          <Button onClick={() => openMonitor('sales')} className="gap-2" variant="outline">
+            <ShoppingCart className="h-4 w-4" /> Monitor Vendas
+          </Button>
+          <Button onClick={() => openMonitor('services')} className="gap-2" variant="outline">
+            <Wrench className="h-4 w-4" /> Monitor Serviços
+          </Button>
+          <Button onClick={() => openMonitor('stock')} className="gap-2" variant="outline">
+            <Package className="h-4 w-4" /> Monitor Estoque
           </Button>
           {userRole === 'admin' && (
             <Button 

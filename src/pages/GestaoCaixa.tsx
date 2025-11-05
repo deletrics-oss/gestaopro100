@@ -24,38 +24,35 @@ export default function GestaoCaixa() {
     queryKey: ['cash-movements'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('expenses')
+        .from('cash_movements')
         .select('*')
-        .eq('category', 'Movimentação Caixa')
-        .order('expense_date', { ascending: false });
+        .order('movement_date', { ascending: false });
       if (error) throw error;
       return data || [];
     },
   });
 
-  // Calcular totais (entradas tem valor negativo no banco)
+  // Calcular totais
   const totalEntradas = cashMovements
-    .filter((m: any) => m.description?.startsWith('Entrada'))
-    .reduce((sum: number, m: any) => sum + Math.abs(m.value || 0), 0);
+    .filter((m: any) => m.type === 'entrada')
+    .reduce((sum: number, m: any) => sum + (m.value || 0), 0);
   
   const totalSaidas = cashMovements
-    .filter((m: any) => m.description?.startsWith('Saída'))
-    .reduce((sum: number, m: any) => sum + Math.abs(m.value || 0), 0);
+    .filter((m: any) => m.type === 'saida')
+    .reduce((sum: number, m: any) => sum + (m.value || 0), 0);
   
   const saldo = totalEntradas - totalSaidas;
 
   // Mutation para criar movimentação
   const createMovement = useMutation({
     mutationFn: async (data: any) => {
-      // Para entrada, salvar com valor NEGATIVO para não contar como despesa
-      const adjustedValue = data.type === 'entrada' ? -Math.abs(parseFloat(data.value)) : Math.abs(parseFloat(data.value));
-      
-      const { error } = await supabase.from('expenses').insert([{
-        category: 'Movimentação Caixa',
-        description: data.type === 'entrada' ? `Entrada: ${data.description}` : `Saída: ${data.description}`,
-        value: adjustedValue,
-        expense_date: data.date,
+      const { error } = await supabase.from('cash_movements').insert([{
+        type: data.type,
+        description: data.description,
+        value: Math.abs(parseFloat(data.value)),
+        movement_date: data.date,
         payment_method: data.payment_method,
+        category: data.category,
         notes: data.notes
       }]);
       if (error) throw error;
@@ -73,10 +70,12 @@ export default function GestaoCaixa() {
   // Mutation para atualizar movimentação
   const updateMovement = useMutation({
     mutationFn: async (data: any) => {
-      const { error } = await supabase.from('expenses').update({
-        description: data.type === 'entrada' ? `Entrada: ${data.description}` : `Saída: ${data.description}`,
-        value: parseFloat(data.value),
+      const { error } = await supabase.from('cash_movements').update({
+        type: data.type,
+        description: data.description,
+        value: Math.abs(parseFloat(data.value)),
         payment_method: data.payment_method,
+        category: data.category,
         notes: data.notes
       }).eq('id', data.id);
       if (error) throw error;
@@ -93,7 +92,7 @@ export default function GestaoCaixa() {
   // Mutation para deletar movimentação
   const deleteMovement = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('expenses').delete().eq('id', id);
+      const { error } = await supabase.from('cash_movements').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -117,7 +116,7 @@ export default function GestaoCaixa() {
         description: `${description}`,
         value: formData.get('value'),
         payment_method: formData.get('payment_method'),
-        notes: `Categoria: ${category}`
+        category
       });
     } else {
       createMovement.mutate({
@@ -126,7 +125,7 @@ export default function GestaoCaixa() {
         value: formData.get('value'),
         date: new Date().toISOString().split('T')[0],
         payment_method: formData.get('payment_method'),
-        notes: `Categoria: ${category}`
+        category
       });
     }
   };
@@ -152,11 +151,12 @@ export default function GestaoCaixa() {
 
     movementsToClone.forEach((movement: any) => {
       createMovement.mutate({
-        type: movement.description?.startsWith('Entrada') ? 'entrada' : 'saida',
-        description: movement.description?.replace('Entrada: ', '').replace('Saída: ', ''),
+        type: movement.type,
+        description: movement.description,
         value: movement.value,
         date: new Date().toISOString().split('T')[0],
         payment_method: movement.payment_method,
+        category: movement.category,
         notes: movement.notes
       });
     });
@@ -198,7 +198,7 @@ export default function GestaoCaixa() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">R$ {totalEntradas.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">{cashMovements.filter((m: any) => m.description?.startsWith('Entrada')).length} transações</p>
+            <p className="text-xs text-muted-foreground">{cashMovements.filter((m: any) => m.type === 'entrada').length} transações</p>
           </CardContent>
         </Card>
 
@@ -209,7 +209,7 @@ export default function GestaoCaixa() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">R$ {totalSaidas.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">{cashMovements.filter((m: any) => m.description?.startsWith('Saída')).length} transações</p>
+            <p className="text-xs text-muted-foreground">{cashMovements.filter((m: any) => m.type === 'saida').length} transações</p>
           </CardContent>
         </Card>
 
@@ -268,12 +268,12 @@ export default function GestaoCaixa() {
                 <div>
                   <Label htmlFor="value">Valor *</Label>
                   <Input id="value" name="value" type="number" step="0.01" placeholder="0,00" 
-                    defaultValue={editingMovement ? editingMovement.value : ''} required />
+                    defaultValue={editingMovement ? Math.abs(editingMovement.value) : ''} required />
                 </div>
                 <div>
                   <Label htmlFor="category">Categoria *</Label>
                   <select name="category" id="category" className="w-full p-2 border rounded" 
-                    defaultValue={editingMovement?.notes?.replace('Categoria: ', '')} required>
+                    defaultValue={editingMovement?.category} required>
                     <option value="Outros">Outros</option>
                     <option value="Retirada">Retirada</option>
                     <option value="Deposito">Depósito</option>
@@ -286,7 +286,7 @@ export default function GestaoCaixa() {
               <div>
                 <Label htmlFor="description">Descrição</Label>
                 <Input id="description" name="description" placeholder="Detalhes da movimentação..." 
-                  defaultValue={editingMovement ? editingMovement.description?.replace('Entrada: ', '').replace('Saída: ', '') : ''} />
+                  defaultValue={editingMovement ? editingMovement.description : ''} />
               </div>
               
               <div>
@@ -384,7 +384,7 @@ export default function GestaoCaixa() {
             </TableHeader>
             <TableBody>
               {cashMovements.map((movement: any) => {
-                const isEntrada = movement.description?.startsWith('Entrada');
+                const isEntrada = movement.type === 'entrada';
                 return (
                   <TableRow key={movement.id}>
                     <TableCell>
@@ -399,7 +399,7 @@ export default function GestaoCaixa() {
                         }}
                       />
                     </TableCell>
-                    <TableCell>{format(new Date(movement.expense_date), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell>{format(new Date(movement.movement_date), 'dd/MM/yyyy')}</TableCell>
                     <TableCell>
                       <Badge variant={isEntrada ? 'default' : 'destructive'}>
                         {isEntrada ? (
@@ -410,7 +410,7 @@ export default function GestaoCaixa() {
                         {isEntrada ? 'entrada' : 'saída'}
                       </Badge>
                     </TableCell>
-                    <TableCell>{movement.description?.replace('Entrada: ', '').replace('Saída: ', '')}</TableCell>
+                    <TableCell>{movement.description}</TableCell>
                     <TableCell className={isEntrada ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                       {isEntrada ? '+' : '-'} R$ {movement.value?.toFixed(2)}
                     </TableCell>
