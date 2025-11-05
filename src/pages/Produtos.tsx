@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { CopyButton } from "@/components/CopyButton";
 import { CSVImporter } from "@/components/CSVImporter";
 import { ProductComponentsManager } from "@/components/products/ProductComponentsManager";
+import { format } from "date-fns";
 
 export default function Produtos() {
   const queryClient = useQueryClient();
@@ -124,11 +125,17 @@ export default function Produtos() {
   };
 
   const handleClone = async (product: any) => {
-    const { id, created_date, updated_date, ...clonedData } = product;
-    await createMutation.mutateAsync({
-      ...clonedData,
-      name: `${clonedData.name} (Cópia)`,
-    });
+    try {
+      const { id, created_date, updated_date, suppliers, ...clonedData } = product;
+      await createMutation.mutateAsync({
+        ...clonedData,
+        name: `${clonedData.name} (Cópia)`,
+      });
+      toast.success("Produto clonado com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao clonar produto");
+      console.error(error);
+    }
   };
 
   const deleteMultipleMutation = useMutation({
@@ -403,9 +410,10 @@ export default function Produtos() {
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
-                  <TableHead>Nome</TableHead>
+                  <TableHead>Nome / Data</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Categoria</TableHead>
+                  <TableHead>Fornecedor</TableHead>
                   <TableHead>Estoque</TableHead>
                   <TableHead>Preço</TableHead>
                   <TableHead>Status</TableHead>
@@ -421,9 +429,19 @@ export default function Produtos() {
                         onCheckedChange={() => handleSelectOne(product.id)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span>{product.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {product.created_date ? format(new Date(product.created_date), 'dd/MM/yyyy') : ''}
+                        </span>
+                      </div>
+                    </TableCell>
                     <TableCell>{product.sku}</TableCell>
                     <TableCell>{product.category}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {product.suppliers?.name || '-'}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={product.stock_quantity <= product.minimum_stock ? "destructive" : "default"}>
                         {product.stock_quantity}

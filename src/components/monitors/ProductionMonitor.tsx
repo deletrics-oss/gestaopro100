@@ -35,7 +35,8 @@ export function ProductionMonitor() {
       const { data, error } = await (supabase as any)
         .from('production_orders')
         .select('*')
-        .order('created_date', { ascending: false });
+        .order('created_date', { ascending: false })
+        .limit(20);
       if (error) throw error;
       return data || [];
     },

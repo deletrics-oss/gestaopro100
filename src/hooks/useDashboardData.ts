@@ -24,6 +24,7 @@ export function useDashboardData() {
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .neq('category', 'Movimentação Caixa')
         .gte('expense_date', format(startOfMonth(currentMonth), 'yyyy-MM-dd'))
         .lte('expense_date', format(endOfMonth(currentMonth), 'yyyy-MM-dd'));
       if (error) throw error;
@@ -47,23 +48,31 @@ export function useDashboardData() {
     },
   });
 
-  const totalEntradas = sales.reduce((sum: number, s: any) => sum + (s.total_revenue || 0), 0);
-  const totalSaidas = expenses.reduce((sum: number, e: any) => sum + (e.value || 0), 0);
-  const saldoCaixa = totalEntradas - totalSaidas;
+  const totalVendasMes = sales.reduce((sum: number, s: any) => sum + (s.total_revenue || 0), 0);
+  const totalDespesasMes = expenses.reduce((sum: number, e: any) => sum + (e.value || 0), 0);
+  const totalLucroMes = sales.reduce((sum: number, s: any) => sum + (s.profit || 0), 0);
 
-  // Calcular entradas de caixa manual (valores são negativos no banco)
+  // Calcular gestão de caixa (valores são negativos no banco para entradas)
   const entradasCaixa = cashMovements
-    .filter((m: any) => m.description?.startsWith('Entrada'))
+    .filter((m: any) => m.value < 0)
     .reduce((sum: number, m: any) => sum + Math.abs(m.value || 0), 0);
+  
+  const saidasCaixa = cashMovements
+    .filter((m: any) => m.value > 0)
+    .reduce((sum: number, m: any) => sum + (m.value || 0), 0);
+  
+  const saldoCaixa = entradasCaixa - saidasCaixa;
 
   return {
     sales,
     expenses,
     cashMovements,
-    totalEntradas,
-    totalSaidas,
+    totalVendasMes,
+    totalDespesasMes,
+    totalLucroMes,
     saldoCaixa,
     entradasCaixa,
+    saidasCaixa,
     isLoading: loadingSales || loadingExpenses || loadingCash,
   };
 }

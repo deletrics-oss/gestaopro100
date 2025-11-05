@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 
 
 export default function Dashboard() {
-  const { saldoCaixa, totalEntradas, totalSaidas, entradasCaixa, isLoading, sales } = useDashboardData();
+  const { saldoCaixa, totalVendasMes, totalDespesasMes, totalLucroMes, entradasCaixa, isLoading, sales } = useDashboardData();
   
   const { data: products = [] } = useQuery({
     queryKey: ['dashboard-products'],
@@ -53,9 +53,9 @@ export default function Dashboard() {
   }, []).sort((a, b) => b.value - a.value).slice(0, 5);
 
   // Calcular totais do mês atual (baseado nos dados já carregados)
-  const currentMonthRevenue = totalEntradas;
-  const currentMonthCost = totalSaidas;
-  const currentMonthProfit = sales.reduce((sum: number, sale: any) => sum + (sale.profit || 0), 0);
+  const currentMonthRevenue = totalVendasMes;
+  const currentMonthCost = totalDespesasMes;
+  const currentMonthProfit = totalLucroMes;
 
   const { data: services = [] } = useQuery({
     queryKey: ['dashboard-services'],
@@ -114,7 +114,7 @@ export default function Dashboard() {
         <MetricCard
           title="Total Vendas"
           subtitle="[mês atual]"
-          value={isLoading ? "Carregando..." : `R$ ${totalEntradas.toFixed(2)}`}
+          value={isLoading ? "Carregando..." : `R$ ${totalVendasMes.toFixed(2)}`}
           icon={TrendingUp}
           variant="success"
         />
@@ -128,14 +128,14 @@ export default function Dashboard() {
         <MetricCard
           title="Lucro Líquido"
           subtitle="[mês atual]"
-          value={isLoading ? "Carregando..." : `R$ ${currentMonthProfit.toFixed(2)}`}
+          value={isLoading ? "Carregando..." : `R$ ${totalLucroMes.toFixed(2)}`}
           icon={TrendingUp}
           variant="purple"
         />
         <MetricCard
           title="Total Despesas"
           subtitle="[mês atual]"
-          value={isLoading ? "Carregando..." : `R$ ${totalSaidas.toFixed(2)}`}
+          value={isLoading ? "Carregando..." : `R$ ${totalDespesasMes.toFixed(2)}`}
           icon={TrendingDown}
           variant="destructive"
         />
