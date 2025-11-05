@@ -173,7 +173,7 @@ export default function Dashboard() {
                 <p className="text-sm opacity-90">Total do Lucro</p>
                 <p className="text-3xl font-bold">R$ {currentMonthProfit.toFixed(2)}</p>
               </div>
-              <Button variant="secondary" className="gap-2">
+              <Button variant="secondary" className="gap-2" onClick={() => window.location.href = '/relatorios'}>
                 Ver Relatório Completo
                 <ArrowRight className="h-4 w-4" />
               </Button>

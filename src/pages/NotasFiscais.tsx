@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Edit, FileCheck, Copy, FileText } from "lucide-react";
+import { Trash2, Edit, FileCheck, Copy, FileText, Printer } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -189,9 +189,15 @@ export default function NotasFiscais() {
           </h1>
           <p className="text-muted-foreground">Gerencie suas notas fiscais</p>
         </div>
-        <Button onClick={() => { setShowForm(!showForm); setEditingInvoice(null); }}>
-          Nova Nota Fiscal
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.print()} className="gap-2">
+            <Printer className="h-4 w-4" />
+            Imprimir Relatório
+          </Button>
+          <Button onClick={() => { setShowForm(!showForm); setEditingInvoice(null); }}>
+            Nova Nota Fiscal
+          </Button>
+        </div>
       </div>
 
       {showForm && (

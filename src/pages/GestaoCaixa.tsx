@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Wallet, TrendingUp, TrendingDown, DollarSign, Plus, Copy, Pencil, Trash2 } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, DollarSign, Plus, Copy, Pencil, Trash2, Printer } from "lucide-react";
 import { format } from "date-fns";
 import { CopyButton } from "@/components/CopyButton";
 import { supabase } from "@/lib/supabase";
@@ -175,13 +175,19 @@ export default function GestaoCaixa() {
           </h1>
           <p className="text-muted-foreground">Controle completo de entradas e saídas - Dados salvos permanentemente</p>
         </div>
-        <Button onClick={() => {
-          setEditingMovement(null);
-          setShowForm(!showForm);
-        }} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Movimentação
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.print()} className="gap-2">
+            <Printer className="h-4 w-4" />
+            Imprimir Relatório
+          </Button>
+          <Button onClick={() => {
+            setEditingMovement(null);
+            setShowForm(!showForm);
+          }} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Movimentação
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
