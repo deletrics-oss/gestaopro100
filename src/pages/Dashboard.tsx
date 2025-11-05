@@ -21,6 +21,22 @@ export default function Dashboard() {
     },
   });
 
+  const { data: userRole } = useQuery({
+    queryKey: ['user-role'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      return data?.role || 'usuario';
+    },
+  });
+
   // Buscar todas as vendas para calcular produtos mais vendidos
   const { data: allSales = [] } = useQuery({
     queryKey: ['dashboard-all-sales'],
@@ -99,13 +115,15 @@ export default function Dashboard() {
             <ShoppingCart className="h-4 w-4" />
             Monitor Produção
           </Button>
-          <Button 
-            className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => openMonitor('management')}
-          >
-            <TrendingUp className="h-4 w-4" />
-            Monitor Gestão
-          </Button>
+          {userRole === 'admin' && (
+            <Button 
+              className="gap-2 bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => openMonitor('management')}
+            >
+              <TrendingUp className="h-4 w-4" />
+              Monitor Gestão
+            </Button>
+          )}
         </div>
       </div>
 

@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      audio_settings: {
+        Row: {
+          alert_mode: string
+          audio_source: string
+          created_at: string | null
+          id: string
+          selected_sounds: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_mode?: string
+          audio_source?: string
+          created_at?: string | null
+          id?: string
+          selected_sounds?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_mode?: string
+          audio_source?: string
+          created_at?: string | null
+          id?: string
+          selected_sounds?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null

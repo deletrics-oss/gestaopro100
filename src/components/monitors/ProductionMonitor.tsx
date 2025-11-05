@@ -36,7 +36,7 @@ export function ProductionMonitor() {
         .from('production_orders')
         .select('*')
         .order('created_date', { ascending: false })
-        .limit(20);
+        .limit(50);
       if (error) throw error;
       return data || [];
     },
@@ -107,8 +107,8 @@ export function ProductionMonitor() {
               <p className="text-3xl text-slate-400">Nenhuma ordem nesta categoria</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {getCurrentOrders().map((order: any) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {getCurrentOrders().slice(0, 8).map((order: any) => (
                 <Card key={order.id} className="bg-gradient-to-br from-purple-900 to-blue-900 border-2 border-purple-600 shadow-2xl">
                   <CardContent className="pt-6">
                     <div className="text-center">

@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 type AlertMode = 'disabled' | 'on-order' | 'interval';
 type AudioSource = 'server' | 'local';
@@ -26,36 +27,71 @@ const DEFAULT_SOUNDS: Record<string, SoundType> = {
 };
 
 export function SoundAlertProvider({ children }: { children: ReactNode }) {
-  const [alertMode, setAlertModeState] = useState<AlertMode>(() => {
-    return (localStorage.getItem('alert_mode') as AlertMode) || 'on-order';
-  });
-  
-  const [audioSource, setAudioSourceState] = useState<AudioSource>(() => {
-    return (localStorage.getItem('audio_source') as AudioSource) || 'server';
-  });
+  const [alertMode, setAlertModeState] = useState<AlertMode>('on-order');
+  const [audioSource, setAudioSourceState] = useState<AudioSource>('server');
+  const [selectedSounds, setSelectedSoundsState] = useState<Record<string, SoundType>>(DEFAULT_SOUNDS);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const [selectedSounds, setSelectedSoundsState] = useState<Record<string, SoundType>>(() => {
-    const saved = localStorage.getItem('selected_sounds');
-    return saved ? JSON.parse(saved) : DEFAULT_SOUNDS;
-  });
+  // Carregar configurações do banco de dados
+  useEffect(() => {
+    const loadSettings = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('audio_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data && !error) {
+        setAlertModeState(data.alert_mode as AlertMode);
+        setAudioSourceState(data.audio_source as AudioSource);
+        setSelectedSoundsState(data.selected_sounds as Record<string, SoundType>);
+      }
+      setIsLoaded(true);
+    };
+
+    loadSettings();
+  }, []);
+
+  const saveSettings = useCallback(async (updates: Partial<{
+    alert_mode: AlertMode;
+    audio_source: AudioSource;
+    selected_sounds: Record<string, SoundType>;
+  }>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('audio_settings')
+      .upsert({
+        user_id: user.id,
+        alert_mode: updates.alert_mode || alertMode,
+        audio_source: updates.audio_source || audioSource,
+        selected_sounds: updates.selected_sounds || selectedSounds,
+      });
+
+    if (error) console.error('Erro ao salvar configurações:', error);
+  }, [alertMode, audioSource, selectedSounds]);
 
   const setAlertMode = useCallback((mode: AlertMode) => {
     setAlertModeState(mode);
-    localStorage.setItem('alert_mode', mode);
-  }, []);
+    saveSettings({ alert_mode: mode });
+  }, [saveSettings]);
 
   const setAudioSource = useCallback((source: AudioSource) => {
     setAudioSourceState(source);
-    localStorage.setItem('audio_source', source);
-  }, []);
+    saveSettings({ audio_source: source });
+  }, [saveSettings]);
 
   const setSelectedSound = useCallback((context: string, sound: SoundType) => {
     setSelectedSoundsState(prev => {
       const updated = { ...prev, [context]: sound };
-      localStorage.setItem('selected_sounds', JSON.stringify(updated));
+      saveSettings({ selected_sounds: updated });
       return updated;
     });
-  }, []);
+  }, [saveSettings]);
 
   const playManualAudio = useCallback((name: string) => {
     try {
