@@ -9,9 +9,11 @@ import { Settings, Bell, Palette, Database, Volume2, Download, Upload, Sun, Moon
 import { useTheme } from "next-themes";
 import { SoundAlertSettings } from "@/components/SoundAlertSettings";
 import { SystemBackup } from "@/components/SystemBackup";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function Configuracoes() {
   const { theme, setTheme } = useTheme();
+  const { role } = usePermissions();
   return (
     <div className="space-y-6">
       <div>
@@ -22,17 +24,18 @@ export default function Configuracoes() {
         <p className="text-muted-foreground">Gerencie integrações, notificações e backup do sistema</p>
       </div>
 
-      <Tabs defaultValue="integracoes" className="space-y-4">
+      <Tabs defaultValue="aparencia" className="space-y-4">
         <TabsList className="bg-card border">
-          <TabsTrigger value="integracoes">Integrações</TabsTrigger>
+          {role === 'admin' && <TabsTrigger value="integracoes">Integrações</TabsTrigger>}
           <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
           <TabsTrigger value="aparencia">Aparência</TabsTrigger>
-          <TabsTrigger value="backup">Backup & Restauração</TabsTrigger>
-          <TabsTrigger value="servidor">Servidor</TabsTrigger>
+          {role === 'admin' && <TabsTrigger value="backup">Backup & Restauração</TabsTrigger>}
+          {role === 'admin' && <TabsTrigger value="servidor">Servidor</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="integracoes" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        {role === 'admin' && (
+          <TabsContent value="integracoes" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
             {/* Bling */}
             <Card className="border-2 border-blue-500">
               <CardHeader className="bg-blue-600 text-white">
@@ -222,7 +225,8 @@ export default function Configuracoes() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
+          </TabsContent>
+        )}
 
         <TabsContent value="notificacoes" className="space-y-4">
           <SoundAlertSettings />
@@ -312,11 +316,14 @@ export default function Configuracoes() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="backup" className="space-y-4">
-          <SystemBackup />
-        </TabsContent>
+        {role === 'admin' && (
+          <TabsContent value="backup" className="space-y-4">
+            <SystemBackup />
+          </TabsContent>
+        )}
 
-        <TabsContent value="servidor">
+        {role === 'admin' && (
+          <TabsContent value="servidor">
           <Card>
             <CardHeader>
               <CardTitle>Configurações de Servidor</CardTitle>
@@ -326,7 +333,8 @@ export default function Configuracoes() {
               <p className="text-muted-foreground">Em construção...</p>
             </CardContent>
           </Card>
-        </TabsContent>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

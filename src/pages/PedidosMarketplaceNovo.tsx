@@ -371,7 +371,7 @@ export default function PedidosMarketplace() {
               <CardTitle className="text-white">Pedidos Cadastrados</CardTitle>
               {selectedIds.length > 0 && (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={handleExportSelected} className="text-white border-white hover:bg-purple-700">
+                  <Button size="sm" variant="outline" onClick={handleExportSelected} className="bg-purple-700 hover:bg-purple-600 text-white border-purple-500">
                     <FileText className="h-4 w-4 mr-2" /> Relatório ({selectedIds.length})
                   </Button>
                   <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate(selectedIds)}>
@@ -397,12 +397,12 @@ export default function PedidosMarketplace() {
                 <TableHead className="text-white">Integração</TableHead>
                 <TableHead className="text-white">Status</TableHead>
                 <TableHead className="text-white">Data</TableHead>
-                <TableHead className="text-white">Ações</TableHead>
+                <TableHead className="text-purple-200">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {orders.map((order: any) => (
-                <TableRow key={order.id}>
+                <TableRow key={order.id} className="border-purple-600">
                   <TableCell>
                     <Checkbox
                       checked={selectedIds.includes(order.id)}
@@ -430,11 +430,11 @@ export default function PedidosMarketplace() {
                   <TableCell>
                     <div className="flex gap-2">
                       {order.status !== 'concluido' && (
-                        <Button size="icon" variant="outline" onClick={() => handleComplete(order)} className="text-white border-white hover:bg-purple-700">
+                        <Button size="icon" variant="outline" onClick={() => handleComplete(order)} className="bg-purple-700 hover:bg-purple-600 text-white border-purple-500">
                           <CheckCircle className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button size="icon" variant="outline" onClick={() => { setEditingOrder(order); setShowForm(true); }} className="text-white border-white hover:bg-purple-700">
+                      <Button size="icon" variant="outline" onClick={() => { setEditingOrder(order); setShowForm(true); }} className="bg-purple-700 hover:bg-purple-600 text-white border-purple-500">
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button size="icon" variant="destructive" onClick={() => deleteMutation.mutate([order.id])}>
