@@ -31,6 +31,7 @@ export default function Relatorios() {
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .neq('category', 'Movimentação Caixa')
         .gte('expense_date', format(startOfMonth(currentDate), 'yyyy-MM-dd'))
         .lte('expense_date', format(endOfMonth(currentDate), 'yyyy-MM-dd'));
       if (error) throw error;

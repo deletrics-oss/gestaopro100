@@ -28,6 +28,15 @@ export default function Estoque() {
     },
   });
 
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ['suppliers-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('suppliers').select('id, name').order('name');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const lowStockProducts = products.filter((p: any) => p.stock_quantity <= p.minimum_stock);
   const totalValue = products.reduce((sum: number, p: any) => sum + (p.stock_quantity * p.cost_price), 0);
 
@@ -103,6 +112,7 @@ export default function Estoque() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const supplierId = formData.get('supplier_id') as string;
     const data = {
       name: formData.get('name'),
       sku: formData.get('sku'),
@@ -113,6 +123,7 @@ export default function Estoque() {
       unit_price: Number(formData.get('unit_price') || 0),
       location: formData.get('location'),
       description: formData.get('description'),
+      supplier_id: supplierId || null,
     };
 
     if (editingProduct) {
@@ -196,7 +207,19 @@ export default function Estoque() {
                 </div>
                 <div>
                   <Label>Fornecedor</Label>
-                  <Input name="supplier_name" defaultValue={editingProduct?.supplier_name} placeholder="Nome do fornecedor" />
+                  <Select name="supplier_id" defaultValue={editingProduct?.supplier_id}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um fornecedor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhum</SelectItem>
+                      {suppliers.map((supplier: any) => (
+                        <SelectItem key={supplier.id} value={supplier.id}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Localização</Label>
@@ -331,7 +354,7 @@ export default function Estoque() {
                     <TableCell>{product.stock_quantity} unidade</TableCell>
                     <TableCell>R$ {product.cost_price?.toFixed(2)}</TableCell>
                     <TableCell>R$ {(product.stock_quantity * product.cost_price).toFixed(2)}</TableCell>
-                    <TableCell>-</TableCell>
+                    <TableCell>{suppliers.find((s: any) => s.id === product.supplier_id)?.name || '-'}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button size="icon" variant="outline" onClick={() => {

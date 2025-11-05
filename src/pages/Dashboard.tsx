@@ -119,8 +119,8 @@ export default function Dashboard() {
           variant="success"
         />
         <MetricCard
-          title="Gestão de Caixa"
-          subtitle="[entradas manuais]"
+          title="Saldo em Caixa"
+          subtitle="[gestão de caixa]"
           value={isLoading ? "Carregando..." : `R$ ${entradasCaixa.toFixed(2)}`}
           icon={Wallet}
           variant="info"
